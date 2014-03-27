@@ -121,11 +121,10 @@ int main(int argc, char *argv[]) {
    header_t header;
    memset(&header, 0, sizeof(header_t));
    header.h_id = htons(1337);       /* always 1337, indicating this is from our application */
-   // header.h_qr = 0;
-   // header.h_op = 0;           /* standard query */
-   // header.h_rd = 1;
-   // header.h_z  = 0;
-   header.h_line = htons(0x0100);
+   header.h_qr = 0;
+   header.h_op = 0;           /* standard query */
+   header.h_rd = 1;
+   header.h_z  = 0;
    header.h_qdcount = htons(1);
    header.h_ancount = 0;
    header.h_nscount = 0;
