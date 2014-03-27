@@ -141,7 +141,6 @@ int main(int argc, char *argv[]) {
 
   // send the DNS request (and call dump_packet with your request)
   dump_packet((unsigned char *)dns_packetp, packet_size);
-/*
   // first, open a UDP socket  
   int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
@@ -154,6 +153,7 @@ int main(int argc, char *argv[]) {
   if (sendto(sock, dns_packetp, packet_size, 0, (struct sockaddr *)&out, sizeof(out)) < 0) {
     // an error occurred
   }
+/*
 
   // wait for the DNS reply (timeout: 5 seconds)
   struct sockaddr_in in;
