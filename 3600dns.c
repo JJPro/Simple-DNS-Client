@@ -21,6 +21,7 @@
 #include <arpa/inet.h>
 
 #include "3600dns.h"
+#include "lib.h"
 
 /**
  * This function will print a hex dump of the provided packet to the screen
@@ -90,21 +91,67 @@ int main(int argc, char *argv[]) {
    */
 
   // process the arguments
+    if (argc < 3){
+        fprintf(stderr, "Usage:\n"
+                        "  ./3600dns [-ns|-mx] @<server:port> <name>\n");
+        exit(EXIT_FAILURE);
+    }
+   unsigned short port = 53;
+   char server_info[strlen(argv[argc-2])+1];
+   char server[INET_ADDRSTRLEN];
+   is_mx = false;
+   is_ns = false;
+   char name[200];
+
+   strcpy(name, argv[argc-1]);
+   strcpy(server_info, argv[argc-2]);
+   char *word = strtok(server_info, "@:");
+   strcpy(server, word);
+   if ((word = strtok(NULL, "@:")) != NULL){
+      port = atoi(word);
+   }
+   if (argc == 4){
+    if (strcmp("-ns", argv[1]) == 0)
+        is_ns = true;
+    else if (strcmp ("-mx", argv[1]) == 0)
+        is_mx = true;
+   }
 
   // construct the DNS request
+   header_t header;
+   memset(&header, 0, sizeof(header_t));
+   header.h_id = htons(1337);       /* always 1337, indicating this is from our application */
+   header.h_qr = 0;
+   header.h_op = 0;          /* standard query */
+   header.h_rd = 1;
+   header.h_z  = 0;
+   header.h_qdcount = htons(1);
+   header.h_ancount = 0;
+   header.h_nscount = 0;
+   header.h_arcount = 0;                  /* header done !*/
+
+   char *quest;
+   int quest_size = setup_question(name, &quest);    /* question done ! */
+   
+   int packet_size = 12 + quest_size;
+   char *dns_packetp = malloc (packet_size);
+   memcpy(dns_packetp, &header, 12);
+   memcpy(dns_packetp + 12, quest, quest_size);      /* packet done ! */
+
 
   // send the DNS request (and call dump_packet with your request)
-  
+  dump_packet((unsigned char *)dns_packetp, packet_size);
+/*
   // first, open a UDP socket  
   int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
   // next, construct the destination address
   struct sockaddr_in out;
   out.sin_family = AF_INET;
-  out.sin_port = htons(<<DNS server port number, as short>>);
-  out.sin_addr.s_addr = inet_addr(<<DNS server IP as char*>>);
+  out.sin_port = htons(port);
+  out.sin_addr.s_addr = inet_addr(server);
 
-  if (sendto(sock, <<your packet>>, <<packet len>>, 0, &out, sizeof(out)) < 0) {
+  if (sendto(sock, dns_packetp, packet_size, 0, (struct sockaddr *)&out, sizeof(out)) < 0) {
     // an error occurred
   }
 
@@ -121,7 +168,6 @@ int main(int argc, char *argv[]) {
   struct timeval t;
   t.tv_sec = <<your timeout in seconds>>;
   t.tv_usec = 0;
-
   // wait to receive, or for a timeout
   if (select(sock + 1, &socks, NULL, NULL, &t)) {
     if (recvfrom(sock, <<your input buffer>>, <<input len>>, 0, &in, &in_len) < 0) {
@@ -132,6 +178,6 @@ int main(int argc, char *argv[]) {
   }
 
   // print out the result
-  
+  */
   return 0;
 }
